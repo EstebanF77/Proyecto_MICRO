@@ -7,59 +7,86 @@ use Illuminate\Http\Request;
 
 class HistoriaUsuarioController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    // Obtener todas las historias (con filtro opcional por sprint o estado)
+    public function index(Request $request)
     {
-        //
+        $query = HistoriaUsuario::query();
+
+        if ($request->has('sprint_id')) {
+            $query->where('sprint_id', $request->sprint_id);
+        }
+
+        if ($request->has('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        return response()->json($query->get());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // Mostrar una historia específica
+    public function show($id)
     {
-        //
+        $historia = HistoriaUsuario::find($id);
+
+        if (!$historia) {
+            return response()->json(['mensaje' => 'Historia no encontrada'], 404);
+        }
+
+        return response()->json($historia);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Crear una nueva historia
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'titulo' => 'required|string|max:150',
+            'descripcion' => 'required|string',
+            'responsable' => 'required|string|max:100',
+            'estado' => 'required|in:nueva,activa,finalizada,impedimento',
+            'puntos' => 'required|integer|min:0',
+            'fecha_creacion' => 'nullable|date',
+            'fecha_finalizacion' => 'nullable|date',
+            'sprint_id' => 'required|integer',
+        ]);
+
+        $historia = HistoriaUsuario::create($validated);
+        return response()->json($historia, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(HistoriaUsuario $historiaUsuario)
+    // Actualizar una historia existente
+    public function update(Request $request, $id)
     {
-        //
+        $historia = HistoriaUsuario::find($id);
+
+        if (!$historia) {
+            return response()->json(['mensaje' => 'Historia no encontrada'], 404);
+        }
+
+        $validated = $request->validate([
+            'titulo' => 'sometimes|required|string|max:150',
+            'descripcion' => 'sometimes|required|string',
+            'responsable' => 'sometimes|required|string|max:100',
+            'estado' => 'sometimes|required|in:nueva,activa,finalizada,impedimento',
+            'puntos' => 'sometimes|required|integer|min:0',
+            'fecha_creacion' => 'nullable|date',
+            'fecha_finalizacion' => 'nullable|date',
+            'sprint_id' => 'sometimes|required|integer',
+        ]);
+
+        $historia->update($validated);
+        return response()->json($historia);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(HistoriaUsuario $historiaUsuario)
+    // Eliminar una historia
+    public function destroy($id)
     {
-        //
-    }
+        $historia = HistoriaUsuario::find($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, HistoriaUsuario $historiaUsuario)
-    {
-        //
-    }
+        if (!$historia) {
+            return response()->json(['mensaje' => 'Historia no encontrada'], 404);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(HistoriaUsuario $historiaUsuario)
-    {
-        //
+        $historia->delete();
+        return response()->json(['mensaje' => 'Historia eliminada']);
     }
 }
