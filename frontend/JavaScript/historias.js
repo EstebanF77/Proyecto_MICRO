@@ -24,30 +24,27 @@ class HistoriaManager {
     }
 
     async cargarHistorias() {
-        try {
-            console.log('Intentando cargar historias desde:', `${this.API_URL}/historias`);
-            const response = await fetch(`${this.API_URL}/historias`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            console.log('Respuesta del servidor:', response.status);
-            
-            if (!response.ok) {
-                throw new Error(`Error al cargar historias: ${response.status}`);
-            }
-            
-            this.historias = await response.json();
-            console.log('Historias cargadas:', this.historias);
-            this.renderizarHistorias();
-        } catch (error) {
-            console.error('Error detallado al cargar historias:', error);
-            this.mostrarError('Error al cargar las historias. Detalles: ' + error.message);
+    try {
+        //  PRIMERO: cargar mapa de sprints
+        await this.actualizarSelectSprints();
+
+        // LUEGO: cargar historias
+        const response = await fetch(`${this.API_URL}/historias`);
+        if (!response.ok) {
+            throw new Error(`Error al cargar historias: ${response.status}`);
         }
+
+        this.historias = await response.json();
+
+        //  Después de tener historias y mapa de sprints, renderizar
+        this.renderizarHistorias();
+        this.actualizarFiltroResponsables();
+    } catch (error) {
+        console.error('Error al cargar historias:', error);
+        this.mostrarError('Error al cargar las historias');
     }
+}
+
 
     renderizarHistorias(historiasFiltradas = null) {
         const tbody = document.getElementById('tablaHistorias');
@@ -73,6 +70,16 @@ class HistoriaManager {
             </tr>
         `).join('');
     }
+actualizarFiltroResponsables() {
+    const select = document.getElementById('filtroResponsable');
+    if (!select) return;
+
+    // Sacar responsables únicos
+    const responsables = [...new Set(this.historias.map(h => h.responsable))];
+
+    select.innerHTML = '<option value="">Todos los Responsables</option>' +
+        responsables.map(r => `<option value="${r}">${r}</option>`).join('');
+}
 
     async actualizarSelectSprints() {
         try {
@@ -104,51 +111,60 @@ class HistoriaManager {
     async mostrarModalHistoria(historia = null) {
         const modal = new bootstrap.Modal(document.getElementById('modalHistoria'));
         const form = document.getElementById('formHistoria');
-        
-        // Cargar los sprints antes de mostrar el modal
+
+        // Cargar sprints antes de mostrar el modal
         await this.actualizarSelectSprints();
-        
+
         if (historia) {
             document.getElementById('historiaId').value = historia.id;
             document.getElementById('titulo').value = historia.titulo;
             document.getElementById('descripcion').value = historia.descripcion;
-            document.getElementById('sprint').value = historia.sprint_id || historia.sprint || '';
+            document.getElementById('sprint').value = historia.sprint_id || '';
             document.getElementById('estado').value = historia.estado;
             document.getElementById('puntos').value = historia.puntos;
             document.getElementById('responsable').value = historia.responsable;
-            document.getElementById('fechaCreacion').value = historia.fecha_creacion ? historia.fecha_creacion.split('T')[0] : '';
-            document.getElementById('fechaLimite').value = historia.fecha_limite ? historia.fecha_limite.split('T')[0] : '';
+
+            // fecha_creacion
+            document.getElementById('fechaCreacion').value = historia.fecha_creacion
+                ? historia.fecha_creacion.split('T')[0]
+                : '';
+
+            // fecha_finalizacion se carga en el input con id="fechaLimite"
+            document.getElementById('fechaLimite').value = historia.fecha_finalizacion
+                ? historia.fecha_finalizacion.split('T')[0]
+                : '';
         } else {
             form.reset();
             document.getElementById('historiaId').value = '';
-            // Establecer la fecha de creación actual para nuevas historias
             document.getElementById('fechaCreacion').value = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaLimite').value = '';
         }
-        
+
         modal.show();
     }
+
 
     async guardarHistoria() {
         const form = document.getElementById('formHistoria');
         const historiaId = document.getElementById('historiaId').value;
-        
-        // Validar que todos los campos requeridos estén llenos
+
+        // Obtener valores del formulario
         const titulo = document.getElementById('titulo').value;
         const descripcion = document.getElementById('descripcion').value;
         const sprint = document.getElementById('sprint').value;
-        console.log('Sprint seleccionado:', sprint);
         const estado = document.getElementById('estado').value;
         const puntos = document.getElementById('puntos').value;
         const responsable = document.getElementById('responsable').value;
         const fechaCreacion = document.getElementById('fechaCreacion').value;
-        const fechaLimite = document.getElementById('fechaLimite').value;
+        const fechaFinalizacion = document.getElementById('fechaLimite').value; // ahora se usará como fecha_finalizacion
 
-        if (!titulo || !descripcion || !sprint || !estado || !puntos || !responsable || !fechaCreacion || !fechaLimite) {
+        // Validación
+        if (!titulo || !descripcion || !sprint || !estado || !puntos || !responsable || !fechaCreacion || !fechaFinalizacion) {
             this.mostrarError('Por favor, complete todos los campos requeridos');
             return;
         }
-        
-        // Solo enviar los campos que espera la base de datos
+
+        // Armar objeto historia para enviar
         const historia = {
             titulo: titulo,
             descripcion: descripcion,
@@ -157,24 +173,14 @@ class HistoriaManager {
             puntos: puntos,
             sprint_id: sprint,
             fecha_creacion: fechaCreacion,
-            fecha_limite: fechaLimite
+            fecha_finalizacion: fechaFinalizacion // campo correcto para Laravel
         };
 
-        console.log('Objeto historia a enviar:', historia);
-
-        // Si la historia está finalizada, puedes agregar la fecha de finalización
-        if (estado === 'finalizada') {
-            historia.fecha_finalizacion = new Date().toISOString().slice(0, 19).replace('T', ' ');
-        }
-
         try {
-            const url = historiaId ? 
-                `${this.API_URL}/historias/${historiaId}` : 
+            const url = historiaId ?
+                `${this.API_URL}/historias/${historiaId}` :
                 `${this.API_URL}/historias`;
-            
-            console.log('Intentando guardar historia en:', url);
-            console.log('Datos a enviar:', historia);
-            
+
             const response = await fetch(url, {
                 method: historiaId ? 'PUT' : 'POST',
                 headers: {
@@ -184,8 +190,6 @@ class HistoriaManager {
                 body: JSON.stringify(historia)
             });
 
-            console.log('Respuesta del servidor:', response.status);
-            
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || `Error del servidor: ${response.status}`);
@@ -199,14 +203,15 @@ class HistoriaManager {
             this.mostrarExito('Historia guardada exitosamente');
             form.reset();
         } catch (error) {
-            console.error('Error detallado al guardar historia:', error);
+            console.error('Error al guardar historia:', error);
             if (error.message === 'Failed to fetch') {
-                this.mostrarError('No se pudo conectar con el servidor. Por favor, verifique que el servidor esté en ejecución en http://localhost:8000');
+                this.mostrarError('No se pudo conectar con el servidor. Asegúrate de que esté corriendo en http://localhost:8000');
             } else {
                 this.mostrarError(error.message || 'Error al guardar la historia');
             }
         }
     }
+
 
     async eliminarHistoria(id) {
         if (!confirm('¿Estás seguro de que deseas eliminar esta historia?')) return;
@@ -239,9 +244,9 @@ class HistoriaManager {
         const responsable = document.getElementById('filtroResponsable').value;
 
         const historiasFiltradas = this.historias.filter(historia => {
-            return (!sprint || historia.sprint === sprint) &&
-                   (!estado || historia.estado === estado) &&
-                   (!responsable || historia.responsable === responsable);
+            return (!sprint || historia.sprint_id == sprint) &&
+                    (!estado || historia.estado === estado) &&
+                    (!responsable || historia.responsable === responsable);
         });
 
         this.renderizarHistorias(historiasFiltradas);
