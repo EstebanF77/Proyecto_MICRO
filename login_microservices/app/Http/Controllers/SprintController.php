@@ -7,59 +7,66 @@ use Illuminate\Http\Request;
 
 class SprintController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Obtener todos los sprints
     public function index()
     {
-        //
+        return response()->json(Sprint::all());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // Mostrar un sprint específico
+    public function show($id)
     {
-        //
+        $sprint = Sprint::find($id);
+
+        if (!$sprint) {
+            return response()->json(['mensaje' => 'Sprint no encontrado'], 404);
+        }
+
+        return response()->json($sprint);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Crear un nuevo sprint
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:100',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        ]);
+
+        $sprint = Sprint::create($validated);
+        return response()->json($sprint, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Sprint $sprint)
+    // Actualizar un sprint existente
+    public function update(Request $request, $id)
     {
-        //
+        $sprint = Sprint::find($id);
+
+        if (!$sprint) {
+            return response()->json(['mensaje' => 'Sprint no encontrado'], 404);
+        }
+
+        $validated = $request->validate([
+            'nombre' => 'sometimes|required|string|max:100',
+            'fecha_inicio' => 'sometimes|required|date',
+            'fecha_fin' => 'sometimes|required|date|after_or_equal:fecha_inicio',
+        ]);
+
+        $sprint->update($validated);
+        return response()->json($sprint);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Sprint $sprint)
+    // Eliminar un sprint
+    public function destroy($id)
     {
-        //
-    }
+        $sprint = Sprint::find($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Sprint $sprint)
-    {
-        //
-    }
+        if (!$sprint) {
+            return response()->json(['mensaje' => 'Sprint no encontrado'], 404);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Sprint $sprint)
-    {
-        //
+        $sprint->delete();
+        return response()->json(['mensaje' => 'Sprint eliminado']);
     }
 }
