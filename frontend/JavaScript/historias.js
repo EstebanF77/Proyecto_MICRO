@@ -3,24 +3,65 @@ class HistoriaManager {
         this.API_URL = 'http://localhost:8000/api';
         this.historias = [];
         this.sprintMap = {}; // Mapa de id a nombre de sprint
+        this.puntosSeleccionados = 0; // Nueva propiedad para rastrear puntos seleccionados
         this.initializeEventListeners();
     }
 
     initializeEventListeners() {
         // Botón para nueva historia
-        document.getElementById('btnNuevaHistoria').addEventListener('click', () => {
-            this.mostrarModalHistoria();
-        });
+        if (document.getElementById('btnNuevaHistoria')) {
+            document.getElementById('btnNuevaHistoria').addEventListener('click', () => {
+                this.mostrarModalHistoria();
+            });
+        }
 
         // Formulario de historia
-        document.getElementById('btnGuardarHistoria').addEventListener('click', () => {
-            this.guardarHistoria();
-        });
+        if (document.getElementById('btnGuardarHistoria')) {
+            document.getElementById('btnGuardarHistoria').addEventListener('click', () => {
+                this.guardarHistoria();
+            });
+        }
 
         // Filtros
-        document.getElementById('filtroSprint').addEventListener('change', () => this.filtrarHistorias());
-        document.getElementById('filtroEstado').addEventListener('change', () => this.filtrarHistorias());
-        document.getElementById('filtroResponsable').addEventListener('change', () => this.filtrarHistorias());
+        if (window.location.pathname.endsWith('reportes.html')) {
+            // Solo aplicar filtros al hacer clic en Confirmar
+            const btnConfirmar = document.getElementById('btnConfirmarFiltros');
+            if (btnConfirmar) {
+                btnConfirmar.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.filtrarHistorias();
+                });
+            }
+        } else {
+            // En index.html, filtrar en cada cambio
+            if (document.getElementById('filtroSprint'))
+                document.getElementById('filtroSprint').addEventListener('change', () => this.filtrarHistorias());
+            if (document.getElementById('filtroEstado'))
+                document.getElementById('filtroEstado').addEventListener('change', () => this.filtrarHistorias());
+            if (document.getElementById('filtroResponsable'))
+                document.getElementById('filtroResponsable').addEventListener('change', () => this.filtrarHistorias());
+        }
+
+        // Eventos para los círculos de puntos
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('punto-circulo')) {
+                const puntos = parseInt(e.target.dataset.puntos);
+                this.seleccionarPuntos(puntos);
+            }
+        });
+    }
+
+    seleccionarPuntos(puntos) {
+        this.puntosSeleccionados = puntos;
+        const circulos = document.querySelectorAll('.punto-circulo');
+        circulos.forEach(circulo => {
+            const puntosCirculo = parseInt(circulo.dataset.puntos);
+            if (puntosCirculo <= puntos) {
+                circulo.classList.add('seleccionado');
+            } else {
+                circulo.classList.remove('seleccionado');
+            }
+        });
     }
 
     async cargarHistorias() {
@@ -57,7 +98,13 @@ class HistoriaManager {
                 <td>${historia.descripcion}</td>
                 <td>${this.sprintMap[historia.sprint_id] || 'Sin Sprint'}</td>
                 <td><span class="estado-${historia.estado}">${historia.estado}</span></td>
-                <td>${historia.puntos}</td>
+                <td>
+                    <div class="d-flex gap-1 justify-content-center align-items-center">
+                        ${[1,2,3,4,5].map(p => `
+                            <div class="punto-circulo-table${p <= historia.puntos ? ' seleccionado' : ''}"></div>
+                        `).join('')}
+                    </div>
+                </td>
                 <td>${historia.responsable}</td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="historiaManager.editarHistoria(${historia.id})">
@@ -115,21 +162,33 @@ actualizarFiltroResponsables() {
         // Cargar sprints antes de mostrar el modal
         await this.actualizarSelectSprints();
 
+        // Crear o actualizar los círculos de puntos
+        const contenedorPuntos = document.getElementById('contenedorPuntos');
+        if (!contenedorPuntos.querySelector('.punto-circulo')) {
+            contenedorPuntos.innerHTML = `
+                <div class="d-flex justify-content-center gap-2">
+                    ${[1, 2, 3, 4, 5].map(puntos => `
+                        <div class="punto-circulo" data-puntos="${puntos}">
+                            ${puntos}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
         if (historia) {
             document.getElementById('historiaId').value = historia.id;
             document.getElementById('titulo').value = historia.titulo;
             document.getElementById('descripcion').value = historia.descripcion;
             document.getElementById('sprint').value = historia.sprint_id || '';
             document.getElementById('estado').value = historia.estado;
-            document.getElementById('puntos').value = historia.puntos;
+            this.seleccionarPuntos(historia.puntos);
             document.getElementById('responsable').value = historia.responsable;
 
-            // fecha_creacion
             document.getElementById('fechaCreacion').value = historia.fecha_creacion
                 ? historia.fecha_creacion.split('T')[0]
                 : '';
 
-            // fecha_finalizacion se carga en el input con id="fechaLimite"
             document.getElementById('fechaLimite').value = historia.fecha_finalizacion
                 ? historia.fecha_finalizacion.split('T')[0]
                 : '';
@@ -138,6 +197,7 @@ actualizarFiltroResponsables() {
             document.getElementById('historiaId').value = '';
             document.getElementById('fechaCreacion').value = new Date().toISOString().split('T')[0];
             document.getElementById('fechaLimite').value = '';
+            this.seleccionarPuntos(0);
         }
 
         modal.show();
@@ -153,10 +213,10 @@ actualizarFiltroResponsables() {
         const descripcion = document.getElementById('descripcion').value;
         const sprint = document.getElementById('sprint').value;
         const estado = document.getElementById('estado').value;
-        const puntos = document.getElementById('puntos').value;
+        const puntos = this.puntosSeleccionados;
         const responsable = document.getElementById('responsable').value;
         const fechaCreacion = document.getElementById('fechaCreacion').value;
-        const fechaFinalizacion = document.getElementById('fechaLimite').value; // ahora se usará como fecha_finalizacion
+        const fechaFinalizacion = document.getElementById('fechaLimite').value;
 
         // Validación
         if (!titulo || !descripcion || !sprint || !estado || !puntos || !responsable || !fechaCreacion || !fechaFinalizacion) {
@@ -287,6 +347,53 @@ actualizarFiltroResponsables() {
         }, 5000);
     }
 }
+
+// Agregar estilos CSS para los círculos
+const style = document.createElement('style');
+style.textContent = `
+    .punto-circulo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+    }
+
+    .punto-circulo:hover {
+        background-color: #e9ecef;
+    }
+
+    .punto-circulo.seleccionado {
+        background-color: #007bff;
+        color: white;
+    }
+`;
+document.head.appendChild(style);
+
+// Agregar estilos CSS para los círculos de la tabla
+const styleTable = document.createElement('style');
+styleTable.textContent = `
+    .punto-circulo-table {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #007bff;
+        display: inline-block;
+        margin-right: 2px;
+        background: #fff;
+        transition: background 0.3s;
+    }
+    .punto-circulo-table.seleccionado {
+        background: #007bff;
+        border-color: #007bff;
+    }
+`;
+document.head.appendChild(styleTable);
 
 // Inicializar el manager de historias
 const historiaManager = new HistoriaManager();
