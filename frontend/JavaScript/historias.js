@@ -208,6 +208,10 @@ actualizarFiltroResponsables() {
             this.mostrarError('Por favor, complete todos los campos requeridos');
             return;
         }
+        if (new Date(fechaFinalizacion) < new Date(fechaCreacion)) {
+            this.mostrarError('La fecha de finalización no puede ser anterior a la fecha de creación');
+            return;
+        }
 
         const historia = {
             titulo: titulo,
