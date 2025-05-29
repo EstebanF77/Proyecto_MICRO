@@ -58,7 +58,7 @@ class HistoriaManager {
                 <td>${historia.id}</td>
                 <td>${historia.titulo}</td>
                 <td>${historia.descripcion}</td>
-                <td>${this.sprintMap[historia.sprint] || this.sprintMap[historia.sprint_id] || 'Sin Sprint'}</td>
+                <td>${this.sprintMap[historia.sprint_id] || 'Sin Sprint'}</td>
                 <td><span class="estado-${historia.estado}">${historia.estado}</span></td>
                 <td>${historia.puntos}</td>
                 <td>${historia.responsable}</td>
@@ -112,7 +112,7 @@ class HistoriaManager {
             document.getElementById('historiaId').value = historia.id;
             document.getElementById('titulo').value = historia.titulo;
             document.getElementById('descripcion').value = historia.descripcion;
-            document.getElementById('sprint').value = historia.sprint;
+            document.getElementById('sprint').value = historia.sprint_id || historia.sprint || '';
             document.getElementById('estado').value = historia.estado;
             document.getElementById('puntos').value = historia.puntos;
             document.getElementById('responsable').value = historia.responsable;
@@ -136,6 +136,7 @@ class HistoriaManager {
         const titulo = document.getElementById('titulo').value;
         const descripcion = document.getElementById('descripcion').value;
         const sprint = document.getElementById('sprint').value;
+        console.log('Sprint seleccionado:', sprint);
         const estado = document.getElementById('estado').value;
         const puntos = document.getElementById('puntos').value;
         const responsable = document.getElementById('responsable').value;
@@ -158,6 +159,8 @@ class HistoriaManager {
             fecha_creacion: fechaCreacion,
             fecha_limite: fechaLimite
         };
+
+        console.log('Objeto historia a enviar:', historia);
 
         // Si la historia está finalizada, puedes agregar la fecha de finalización
         if (estado === 'finalizada') {
