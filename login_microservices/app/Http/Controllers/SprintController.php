@@ -7,13 +7,11 @@ use Illuminate\Http\Request;
 
 class SprintController extends Controller
 {
-    // Obtener todos los sprints
     public function index()
     {
         return response()->json(Sprint::all());
     }
 
-    // Mostrar un sprint específico
     public function show($id)
     {
         $sprint = Sprint::find($id);
@@ -25,7 +23,6 @@ class SprintController extends Controller
         return response()->json($sprint);
     }
 
-    // Crear un nuevo sprint
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -38,7 +35,6 @@ class SprintController extends Controller
         return response()->json($sprint, 201);
     }
 
-    // Actualizar un sprint existente
     public function update(Request $request, $id)
     {
         $sprint = Sprint::find($id);
@@ -57,7 +53,6 @@ class SprintController extends Controller
         return response()->json($sprint);
     }
 
-    // Eliminar un sprint
     public function destroy($id)
     {
         $sprint = Sprint::find($id);

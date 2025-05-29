@@ -2,29 +2,25 @@ class HistoriaManager {
     constructor() {
         this.API_URL = 'http://localhost:8000/api';
         this.historias = [];
-        this.sprintMap = {}; // Mapa de id a nombre de sprint
-        this.puntosSeleccionados = 0; // Nueva propiedad para rastrear puntos seleccionados
+        this.sprintMap = {}; 
+        this.puntosSeleccionados = 0; 
         this.initializeEventListeners();
     }
 
     initializeEventListeners() {
-        // Botón para nueva historia
         if (document.getElementById('btnNuevaHistoria')) {
             document.getElementById('btnNuevaHistoria').addEventListener('click', () => {
                 this.mostrarModalHistoria();
             });
         }
 
-        // Formulario de historia
         if (document.getElementById('btnGuardarHistoria')) {
             document.getElementById('btnGuardarHistoria').addEventListener('click', () => {
                 this.guardarHistoria();
             });
         }
 
-        // Filtros
         if (window.location.pathname.endsWith('reportes.html')) {
-            // Solo aplicar filtros al hacer clic en Confirmar
             const btnConfirmar = document.getElementById('btnConfirmarFiltros');
             if (btnConfirmar) {
                 btnConfirmar.addEventListener('click', (e) => {
@@ -33,7 +29,6 @@ class HistoriaManager {
                 });
             }
         } else {
-            // En index.html, filtrar en cada cambio
             if (document.getElementById('filtroSprint'))
                 document.getElementById('filtroSprint').addEventListener('change', () => this.filtrarHistorias());
             if (document.getElementById('filtroEstado'))
@@ -42,7 +37,6 @@ class HistoriaManager {
                 document.getElementById('filtroResponsable').addEventListener('change', () => this.filtrarHistorias());
         }
 
-        // Eventos para los círculos de puntos
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('punto-circulo')) {
                 const puntos = parseInt(e.target.dataset.puntos);
@@ -66,10 +60,8 @@ class HistoriaManager {
 
     async cargarHistorias() {
     try {
-        //  PRIMERO: cargar mapa de sprints
         await this.actualizarSelectSprints();
 
-        // LUEGO: cargar historias
         const response = await fetch(`${this.API_URL}/historias`);
         if (!response.ok) {
             throw new Error(`Error al cargar historias: ${response.status}`);
@@ -77,7 +69,6 @@ class HistoriaManager {
 
         this.historias = await response.json();
 
-        //  Después de tener historias y mapa de sprints, renderizar
         this.renderizarHistorias();
         this.actualizarFiltroResponsables();
     } catch (error) {
@@ -121,7 +112,6 @@ actualizarFiltroResponsables() {
     const select = document.getElementById('filtroResponsable');
     if (!select) return;
 
-    // Sacar responsables únicos
     const responsables = [...new Set(this.historias.map(h => h.responsable))];
 
     select.innerHTML = '<option value="">Todos los Responsables</option>' +
@@ -136,7 +126,6 @@ actualizarFiltroResponsables() {
             }
             const sprints = await response.json();
             
-            // Guardar el mapa de id a nombre
             this.sprintMap = {};
             sprints.forEach(sprint => {
                 this.sprintMap[sprint.id] = sprint.nombre;
@@ -159,10 +148,8 @@ actualizarFiltroResponsables() {
         const modal = new bootstrap.Modal(document.getElementById('modalHistoria'));
         const form = document.getElementById('formHistoria');
 
-        // Cargar sprints antes de mostrar el modal
         await this.actualizarSelectSprints();
 
-        // Crear o actualizar los círculos de puntos
         const contenedorPuntos = document.getElementById('contenedorPuntos');
         if (!contenedorPuntos.querySelector('.punto-circulo')) {
             contenedorPuntos.innerHTML = `
@@ -208,7 +195,6 @@ actualizarFiltroResponsables() {
         const form = document.getElementById('formHistoria');
         const historiaId = document.getElementById('historiaId').value;
 
-        // Obtener valores del formulario
         const titulo = document.getElementById('titulo').value;
         const descripcion = document.getElementById('descripcion').value;
         const sprint = document.getElementById('sprint').value;
@@ -218,13 +204,11 @@ actualizarFiltroResponsables() {
         const fechaCreacion = document.getElementById('fechaCreacion').value;
         const fechaFinalizacion = document.getElementById('fechaLimite').value;
 
-        // Validación
         if (!titulo || !descripcion || !sprint || !estado || !puntos || !responsable || !fechaCreacion || !fechaFinalizacion) {
             this.mostrarError('Por favor, complete todos los campos requeridos');
             return;
         }
 
-        // Armar objeto historia para enviar
         const historia = {
             titulo: titulo,
             descripcion: descripcion,
@@ -233,7 +217,7 @@ actualizarFiltroResponsables() {
             puntos: puntos,
             sprint_id: sprint,
             fecha_creacion: fechaCreacion,
-            fecha_finalizacion: fechaFinalizacion // campo correcto para Laravel
+            fecha_finalizacion: fechaFinalizacion 
         };
 
         try {
@@ -348,7 +332,7 @@ actualizarFiltroResponsables() {
     }
 }
 
-// Agregar estilos CSS para los círculos
+
 const style = document.createElement('style');
 style.textContent = `
     .punto-circulo {
@@ -375,7 +359,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Agregar estilos CSS para los círculos de la tabla
 const styleTable = document.createElement('style');
 styleTable.textContent = `
     .punto-circulo-table {
@@ -395,7 +378,6 @@ styleTable.textContent = `
 `;
 document.head.appendChild(styleTable);
 
-// Inicializar el manager de historias
 const historiaManager = new HistoriaManager();
 document.addEventListener('DOMContentLoaded', () => {
     historiaManager.cargarHistorias();

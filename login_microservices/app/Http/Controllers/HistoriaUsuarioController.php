@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 class HistoriaUsuarioController extends Controller
 {
-    // Obtener todas las historias (con filtro opcional por sprint o estado)
     public function index(Request $request)
     {
         $query = HistoriaUsuario::query();
@@ -23,7 +22,6 @@ class HistoriaUsuarioController extends Controller
         return response()->json($query->get());
     }
 
-    // Mostrar una historia específica
     public function show($id)
     {
         $historia = HistoriaUsuario::find($id);
@@ -35,7 +33,6 @@ class HistoriaUsuarioController extends Controller
         return response()->json($historia);
     }
 
-    // Crear una nueva historia
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -53,7 +50,6 @@ class HistoriaUsuarioController extends Controller
         return response()->json($historia, 201);
     }
 
-    // Actualizar una historia existente
     public function update(Request $request, $id)
     {
         $historia = HistoriaUsuario::find($id);
@@ -77,7 +73,6 @@ class HistoriaUsuarioController extends Controller
         return response()->json($historia);
     }
 
-    // Eliminar una historia
     public function destroy($id)
     {
         $historia = HistoriaUsuario::find($id);

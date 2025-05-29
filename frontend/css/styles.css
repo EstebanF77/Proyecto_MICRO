@@ -13,12 +13,12 @@ body {
     background-color: #f8f9fa;
 }
 
-/* Estilos del navbar */
+
 .navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Estilos de las tarjetas */
+
 .card {
     border: none;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -29,7 +29,7 @@ body {
     transform: translateY(-2px);
 }
 
-/* Estilos de la tabla */
+
 .table {
     background-color: white;
     border-radius: 8px;
@@ -41,7 +41,7 @@ body {
     border-bottom: 2px solid #dee2e6;
 }
 
-/* Estilos de los botones */
+
 .btn {
     border-radius: 4px;
     padding: 0.5rem 1rem;
@@ -53,7 +53,7 @@ body {
     border-color: var(--primary-color);
 }
 
-/* Estilos de los modales */
+
 .modal-content {
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -64,7 +64,7 @@ body {
     border-bottom: 1px solid #dee2e6;
 }
 
-/* Estilos de los formularios */
+
 .form-control {
     border-radius: 4px;
     border: 1px solid #ced4da;
@@ -76,7 +76,7 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
 }
 
-/* Estilos para los estados de las historias */
+
 .estado-nueva {
     color: var(--info-color);
 }
@@ -93,7 +93,7 @@ body {
     color: var(--danger-color);
 }
 
-/* Estilos para los reportes */
+
 .reporte-card {
     background-color: white;
     border-radius: 8px;
@@ -112,7 +112,7 @@ body {
     font-weight: 700;
 }
 
-/* Estilos para los filtros */
+
 .filtros-container {
     background-color: white;
     border-radius: 8px;
@@ -121,7 +121,7 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Estilos para la paginación */
+
 .pagination {
     margin-top: 1rem;
 }
@@ -135,31 +135,31 @@ body {
     border-color: var(--primary-color);
 }
 
-/* Estilos para los tooltips */
+
 .tooltip {
     font-size: 0.875rem;
 }
 
-/* Estilos para los badges */
+
 .badge {
     padding: 0.5em 0.75em;
     font-weight: 500;
 }
 
-/* Estilos para los alerts */
+
 .alert {
     border-radius: 4px;
     border: none;
     padding: 1rem;
 }
 
-/* Estilos para los spinners */
+
 .spinner-border {
     width: 1.5rem;
     height: 1.5rem;
 }
 
-/* Estilos para los dropdowns */
+
 .dropdown-menu {
     border: none;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -169,7 +169,7 @@ body {
     background-color: #f8f9fa;
 }
 
-/* Estilos para los tabs */
+
 .nav-tabs {
     border-bottom: 2px solid #dee2e6;
 }
@@ -184,7 +184,7 @@ body {
     border-bottom: 2px solid var(--primary-color);
 }
 
-/* Estilos para los tooltips personalizados */
+
 [data-tooltip] {
     position: relative;
     cursor: help;

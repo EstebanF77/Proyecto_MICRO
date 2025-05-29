@@ -9,10 +9,8 @@ class HistoriaUsuario extends Model
 {
     use HasFactory;
 
-    // Nombre de la tabla (opcional si sigue la convención)
     protected $table = 'historias';
 
-    // Campos que se pueden asignar masivamente
     protected $fillable = [
         'titulo',
         'descripcion',
@@ -24,13 +22,11 @@ class HistoriaUsuario extends Model
         'sprint_id',
     ];
 
-    // Casts para fechas (opcional)
     protected $casts = [
         'fecha_creacion' => 'date',
         'fecha_finalizacion' => 'date',
     ];
 
-    // Relación con el modelo Sprint
     public function sprint()
     {
         return $this->belongsTo(Sprint::class);

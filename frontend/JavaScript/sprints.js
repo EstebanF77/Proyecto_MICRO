@@ -6,12 +6,10 @@ class SprintManager {
     }
 
     initializeEventListeners() {
-        // Botón para nuevo sprint
         document.getElementById('btnNuevoSprint')?.addEventListener('click', () => {
             this.mostrarModalSprint();
         });
 
-        // Formulario de sprint
         document.getElementById('btnGuardarSprint')?.addEventListener('click', () => {
             this.guardarSprint();
         });
@@ -125,17 +123,14 @@ class SprintManager {
     }
 
     mostrarError(mensaje) {
-        // Implementar lógica para mostrar mensajes de error
         console.error(mensaje);
     }
 
     mostrarExito(mensaje) {
-        // Implementar lógica para mostrar mensajes de éxito
         console.log(mensaje);
     }
 }
 
-// Inicializar el manager de sprints
 const sprintManager = new SprintManager();
 document.addEventListener('DOMContentLoaded', () => {
     sprintManager.cargarSprints();
