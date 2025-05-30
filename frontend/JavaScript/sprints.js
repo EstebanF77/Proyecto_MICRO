@@ -17,22 +17,7 @@ class SprintManager {
 
     async cargarSprints() {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                this.mostrarError('No hay sesión activa. Por favor, inicie sesión.');
-                return;
-            }
-
-            const response = await fetch(`${this.API_URL}/sprints`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.status === 401) {
-                this.mostrarError('Sesión expirada. Por favor, inicie sesión nuevamente.');
-                return;
-            }
+            const response = await fetch(`${this.API_URL}/sprints`);
 
             if (!response.ok) {
                 throw new Error(`Error HTTP: ${response.status}`);
@@ -57,7 +42,7 @@ class SprintManager {
         if (!Array.isArray(this.sprints) || this.sprints.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center">No hay sprints disponibles</td>
+                    <td colspan="5" class="text-center">No hay sprints disponibles</td>
                 </tr>
             `;
             return;
@@ -69,13 +54,11 @@ class SprintManager {
                 <td>${sprint.nombre || 'Sin nombre'}</td>
                 <td>${this.formatearFecha(sprint.fecha_inicio)}</td>
                 <td>${this.formatearFecha(sprint.fecha_fin)}</td>
-                <td>${sprint.historias_count || 0}</td>
                 <td>
                     <button class="btn btn-sm btn-primary me-1" onclick="sprintManager.editarSprint(${sprint.id})">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="sprintManager.eliminarSprint(${sprint.id})" 
-                            ${sprint.historias_count > 0 ? 'disabled' : ''}>
+                    <button class="btn btn-sm btn-danger" onclick="sprintManager.eliminarSprint(${sprint.id})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -124,8 +107,7 @@ class SprintManager {
             const response = await fetch(url, {
                 method,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(sprint)
             });
@@ -142,20 +124,25 @@ class SprintManager {
     }
 
     async eliminarSprint(id) {
-        const sprint = this.sprints.find(s => s.id === id);
-        if (sprint.historias_count > 0) {
-            this.mostrarError('No se puede eliminar un sprint que tiene historias vinculadas');
+        // Validar si hay historias asociadas a este sprint
+        try {
+            const historiasResponse = await fetch(`${this.API_URL}/historias`);
+            if (!historiasResponse.ok) throw new Error('No se pudieron obtener las historias');
+            const historias = await historiasResponse.json();
+            const asociadas = historias.some(historia => String(historia.sprint_id) === String(id));
+            if (asociadas) {
+                this.mostrarError('No se puede eliminar un sprint que tiene historias vinculadas');
+                return;
+            }
+        } catch (error) {
+            console.error('Error al validar historias asociadas:', error);
+            this.mostrarError('Error al validar historias asociadas');
             return;
         }
 
-        if (!confirm('¿Estás seguro de que deseas eliminar este sprint?')) return;
-
         try {
             const response = await fetch(`${this.API_URL}/sprints/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+                method: 'DELETE'
             });
 
             if (!response.ok) throw new Error('Error al eliminar el sprint');
@@ -175,12 +162,27 @@ class SprintManager {
         }
     }
 
+    mostrarAlertaBootstrap(mensaje, tipo = 'danger') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
     mostrarError(mensaje) {
-        alert(mensaje);
+        this.mostrarAlertaBootstrap(mensaje, 'danger');
     }
 
     mostrarExito(mensaje) {
-        alert(mensaje);
+        this.mostrarAlertaBootstrap(mensaje, 'success');
     }
 }
 
