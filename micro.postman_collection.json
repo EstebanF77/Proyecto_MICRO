@@ -1,0 +1,34 @@
+{
+	"info": {
+		"_postman_id": "86aaa49f-8dc3-4001-ba82-cecd74c451f0",
+		"name": "micro",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44455413",
+		"_collection_link": "https://joseff-3418639.postman.co/workspace/joseff's-Workspace~b437049f-f445-4cf6-868a-2ab01c03f3a4/collection/44455413-86aaa49f-8dc3-4001-ba82-cecd74c451f0?action=share&source=collection_link&creator=44455413"
+	},
+	"item": [
+		{
+			"name": "consultar sprints",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/sprints",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"sprints"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
