@@ -17,27 +17,74 @@ class SprintManager {
 
     async cargarSprints() {
         try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                this.mostrarError('No hay sesión activa. Por favor, inicie sesión.');
+                return;
+            }
+
             const response = await fetch(`${this.API_URL}/sprints`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
-            this.sprints = await response.json();
-            this.actualizarSelectSprints();
+
+            if (response.status === 401) {
+                this.mostrarError('Sesión expirada. Por favor, inicie sesión nuevamente.');
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            this.sprints = data;
+            this.actualizarTablaSprints();
         } catch (error) {
             console.error('Error al cargar sprints:', error);
-            this.mostrarError('Error al cargar los sprints');
+            this.mostrarError('Error al cargar los sprints. Por favor, intente nuevamente.');
         }
     }
 
-    actualizarSelectSprints() {
-        const select = document.getElementById('filtroSprint');
-        if (!select) return;
+    actualizarTablaSprints() {
+        const tbody = document.getElementById('tablaSprints');
+        if (!tbody) {
+            console.error('No se encontró el elemento tablaSprints');
+            return;
+        }
 
-        select.innerHTML = '<option value="">Todos los Sprints</option>' +
-            this.sprints.map(sprint => 
-                `<option value="${sprint.id}">${sprint.nombre}</option>`
-            ).join('');
+        if (!Array.isArray(this.sprints) || this.sprints.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center">No hay sprints disponibles</td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = this.sprints.map(sprint => `
+            <tr>
+                <td>${sprint.id}</td>
+                <td>${sprint.nombre || 'Sin nombre'}</td>
+                <td>${this.formatearFecha(sprint.fecha_inicio)}</td>
+                <td>${this.formatearFecha(sprint.fecha_fin)}</td>
+                <td>${sprint.historias_count || 0}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary me-1" onclick="sprintManager.editarSprint(${sprint.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="sprintManager.eliminarSprint(${sprint.id})" 
+                            ${sprint.historias_count > 0 ? 'disabled' : ''}>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    formatearFecha(fecha) {
+        return new Date(fecha).toLocaleDateString('es-ES');
     }
 
     mostrarModalSprint(sprint = null) {
@@ -95,6 +142,12 @@ class SprintManager {
     }
 
     async eliminarSprint(id) {
+        const sprint = this.sprints.find(s => s.id === id);
+        if (sprint.historias_count > 0) {
+            this.mostrarError('No se puede eliminar un sprint que tiene historias vinculadas');
+            return;
+        }
+
         if (!confirm('¿Estás seguro de que deseas eliminar este sprint?')) return;
 
         try {
@@ -123,11 +176,11 @@ class SprintManager {
     }
 
     mostrarError(mensaje) {
-        console.error(mensaje);
+        alert(mensaje);
     }
 
     mostrarExito(mensaje) {
-        console.log(mensaje);
+        alert(mensaje);
     }
 }
 

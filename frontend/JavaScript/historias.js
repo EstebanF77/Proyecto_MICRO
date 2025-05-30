@@ -81,6 +81,7 @@ class HistoriaManager {
     renderizarHistorias(historiasFiltradas = null) {
         const tbody = document.getElementById('tablaHistorias');
         const historias = historiasFiltradas || this.historias;
+        const esPaginaReportes = window.location.pathname.endsWith('reportes.html');
         
         tbody.innerHTML = historias.map(historia => `
             <tr>
@@ -97,6 +98,7 @@ class HistoriaManager {
                     </div>
                 </td>
                 <td>${historia.responsable}</td>
+                ${!esPaginaReportes ? `
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="historiaManager.editarHistoria(${historia.id})">
                         Editar
@@ -105,6 +107,7 @@ class HistoriaManager {
                         Eliminar
                     </button>
                 </td>
+                ` : ''}
             </tr>
         `).join('');
     }
